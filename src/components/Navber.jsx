@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   HiOutlineHome,
   HiOutlineBuildingOffice2,
@@ -17,16 +17,7 @@ import {
   HiOutlineXMark,
 } from "react-icons/hi2";
 import { RiMoonLine, RiSunLine } from "react-icons/ri";
-
-// ─── Demo user — swap with your real AuthContext ───────────────────────────
-const DEMO_USER = {
-  name: "Pranto Ahmed",
-  email: "pranto@rentora.com",
-  role: "tenant", // "tenant" | "owner" | "admin"
-  photoURL: null,
-};
-// const DEMO_USER = null;
-// ──────────────────────────────────────────────────────────────────────────────
+import { useSession, signOut } from "@/lib/auth-client";
 
 const NAV_LINKS = [
   { label: "Home", href: "/", icon: <HiOutlineHome size={15} /> },
@@ -108,19 +99,53 @@ const ROLE_CONFIG = {
 };
 
 export default function Navbar() {
-  const user = DEMO_USER;
-  const handleLogout = () => console.log("logout triggered");
+  const { data: session, isPending } = useSession();
+  const sessionUser = session?.user ?? null;
+  const router = useRouter();
+
+  // Holds fresh DB data when session is stale (e.g. right after register)
+  const [freshUser, setFreshUser] = useState(null);
+
+  useEffect(() => {
+    if (!sessionUser) {
+      setFreshUser(null);
+      return;
+    }
+    // Session already has image — no need to fetch
+    if (sessionUser.image) {
+      setFreshUser(null);
+      return;
+    }
+    // Session is stale, fetch fresh data from MongoDB
+    fetch(`/api/users/me?email=${encodeURIComponent(sessionUser.email)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data?.image) setFreshUser(data);
+      })
+      .catch(() => {});
+  }, [sessionUser?.email, sessionUser?.image]);
+
+  // Final user object — fresh data wins over stale session
+  const user = sessionUser ? { ...sessionUser, ...freshUser } : null;
+
+  const handleLogout = async () => {
+    await signOut();
+    router.push("/");
+    router.refresh();
+  };
 
   const pathname = usePathname();
   const [isDark, setIsDark] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const dropdownRef = useRef(null);
 
-  const roleConfig = user ? ROLE_CONFIG[user.role] : null;
-  const dashboardHref = user ? DASHBOARD_ROUTES[user.role] : "/login";
+  const role = user?.role ?? "tenant";
+  const roleConfig = user ? (ROLE_CONFIG[role] ?? ROLE_CONFIG["tenant"]) : null;
+  const dashboardHref = user
+    ? (DASHBOARD_ROUTES[role] ?? "/dashboard/tenant")
+    : "/login";
 
   const initials = user
     ? user.name
@@ -132,8 +157,8 @@ export default function Navbar() {
     : "";
 
   useEffect(() => {
-    function handleClickOutside(event) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    function handleClickOutside(e) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
         setDropdownOpen(false);
       }
     }
@@ -186,6 +211,33 @@ export default function Navbar() {
         : "text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800",
     ].join(" ");
 
+  const Avatar = ({ size = "sm" }) => {
+    const cls = size === "sm" ? "w-7 h-7 text-[11px]" : "w-10 h-10 text-sm";
+    if (user?.image) {
+      return (
+        <img
+          src={user.image}
+          alt={user.name}
+          className={`${cls} rounded-md object-cover flex-shrink-0`}
+        />
+      );
+    }
+    return (
+      <div
+        className={`${cls} bg-gradient-to-br from-[#1B3B5A] to-[#E8834D] flex items-center justify-center rounded-md flex-shrink-0 font-bold text-white uppercase`}
+      >
+        {initials}
+      </div>
+    );
+  };
+
+  const AuthSkeleton = () => (
+    <div className="hidden md:flex items-center gap-2">
+      <div className="w-20 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" />
+      <div className="w-24 h-9 rounded-lg bg-slate-100 dark:bg-slate-800 animate-pulse" />
+    </div>
+  );
+
   return (
     <>
       <nav
@@ -199,12 +251,12 @@ export default function Navbar() {
       >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-[68px]">
-            {/* ── BRAND ──────────────────────────────────────────────────────── */}
+            {/* BRAND */}
             <Link
               href="/"
               className="flex items-center gap-2.5 flex-shrink-0 group"
             >
-              <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-[#1B3B5A] to-[#1e4570] flex items-center justify-center flex-shrink-0 relative overflow-hidden">
+              <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-[#1B3B5A] to-[#1e4570] flex items-center justify-center flex-shrink-0 overflow-hidden">
                 <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
                   <path
                     d="M3 9.5L10 3l7 6.5V17a1 1 0 01-1 1H4a1 1 0 01-1-1V9.5z"
@@ -228,7 +280,7 @@ export default function Navbar() {
               </span>
             </Link>
 
-            {/* ── CENTER NAV LINKS ──────────────────────────────────── */}
+            {/* CENTER NAV */}
             <div className="hidden md:flex items-center gap-1">
               {NAV_LINKS.map((link) => (
                 <Link
@@ -240,8 +292,6 @@ export default function Navbar() {
                   {link.label}
                 </Link>
               ))}
-
-              {/* 🟢 মাঝখানের অপ্রয়োজনীয় ডুপ্লিকেট লগইন/রেজিস্টার লিংক দুটি রিমুভ করা হয়েছে */}
               {user && (
                 <Link href={dashboardHref} className={linkClass("/dashboard")}>
                   <HiOutlineSquares2X2 size={15} />
@@ -250,18 +300,19 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* ── RIGHT ACTIONS ───────────────────────────────────────────────── */}
+            {/* RIGHT ACTIONS */}
             <div className="flex items-center gap-2">
               <button
                 onClick={toggleTheme}
                 aria-label="Toggle theme"
-                className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 hover:text-slate-700 dark:hover:text-slate-200 transition-all duration-150"
+                className="w-9 h-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-150"
               >
                 {isDark ? <RiSunLine size={17} /> : <RiMoonLine size={16} />}
               </button>
 
-              {/* LOGGED OUT BUTTONS (ডানপাশের সুন্দর বাটনগুলো ঠিক রাখা হয়েছে) */}
-              {!user && (
+              {isPending ? (
+                <AuthSkeleton />
+              ) : !user ? (
                 <div className="hidden md:flex items-center gap-2">
                   <Link
                     href="/login"
@@ -276,18 +327,13 @@ export default function Navbar() {
                     Register
                   </Link>
                 </div>
-              )}
-
-              {/* CUSTOM TAILWIND DROPDOWN */}
-              {user && (
+              ) : (
                 <div className="relative" ref={dropdownRef}>
                   <button
                     onClick={() => setDropdownOpen(!dropdownOpen)}
                     className="flex items-center gap-2 pl-1.5 pr-3 py-1 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all duration-150 outline-none focus:ring-2 focus:ring-[#1B3B5A]"
                   >
-                    <div className="w-7 h-7 bg-gradient-to-br from-[#1B3B5A] to-[#E8834D] flex items-center justify-center rounded-md flex-shrink-0 text-[11px] font-bold text-white uppercase">
-                      {initials}
-                    </div>
+                    <Avatar size="sm" />
                     <span className="text-sm font-medium text-[#1A202C] dark:text-slate-200 max-w-[80px] truncate hidden sm:block">
                       {user.name.split(" ")[0]}
                     </span>
@@ -304,14 +350,10 @@ export default function Navbar() {
                     </svg>
                   </button>
 
-                  {/* Dropdown Menu Panel */}
                   {dropdownOpen && (
-                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 p-1.5 origin-top-right transition-all animate-in fade-in slide-in-from-top-2 duration-150">
-                      {/* Header */}
+                    <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-[#1E293B] border border-slate-200 dark:border-slate-700 rounded-xl shadow-xl z-50 p-1.5 origin-top-right">
                       <div className="flex items-center gap-3 p-2.5 border-b border-slate-100 dark:border-slate-700/60 mb-1">
-                        <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-[#1B3B5A] to-[#E8834D] flex items-center justify-center rounded-md text-sm font-bold text-white">
-                          {initials}
-                        </div>
+                        <Avatar size="lg" />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold text-[#1A202C] dark:text-slate-100 truncate">
                             {user.name}
@@ -326,8 +368,6 @@ export default function Navbar() {
                           </span>
                         </div>
                       </div>
-
-                      {/* Menu Items */}
                       <div className="py-0.5 border-b border-slate-100 dark:border-slate-700/60 mb-1">
                         {roleConfig?.menuItems.map((item) => (
                           <Link
@@ -340,8 +380,6 @@ export default function Navbar() {
                           </Link>
                         ))}
                       </div>
-
-                      {/* Logout */}
                       <button
                         onClick={handleLogout}
                         className="flex items-center gap-2.5 w-full px-2.5 py-2 text-sm font-medium text-red-500 rounded-lg hover:bg-red-50 dark:hover:bg-red-950/20 transition-all"
@@ -354,7 +392,6 @@ export default function Navbar() {
                 </div>
               )}
 
-              {/* Hamburger Button */}
               <button
                 onClick={() => setMobileOpen((v) => !v)}
                 className="md:hidden w-9 h-9 flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all"
@@ -370,7 +407,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      {/* ── MOBILE MENU ── */}
+      {/* MOBILE MENU */}
       <div
         className={`fixed inset-0 z-40 md:hidden transition-all duration-200 ${mobileOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
       >
@@ -383,9 +420,7 @@ export default function Navbar() {
         >
           {user && (
             <div className="flex items-center gap-3 p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 mb-2">
-              <div className="w-11 h-11 flex-shrink-0 bg-gradient-to-br from-[#1B3B5A] to-[#E8834D] flex items-center justify-center rounded-md text-sm font-bold text-white">
-                {initials}
-              </div>
+              <Avatar size="lg" />
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-[#1A202C] dark:text-slate-100 truncate">
                   {user.name}
@@ -423,7 +458,9 @@ export default function Navbar() {
 
           <div className="h-px bg-slate-100 dark:bg-slate-800 my-1" />
 
-          {!user && (
+          {isPending ? (
+            <div className="h-12 rounded-xl bg-slate-100 dark:bg-slate-800 animate-pulse" />
+          ) : !user ? (
             <>
               <Link href="/login" className={mobileLinkClass("/login")}>
                 Login
@@ -435,31 +472,29 @@ export default function Navbar() {
                 Register
               </Link>
             </>
-          )}
-
-          {user &&
-            roleConfig?.menuItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[15px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+          ) : (
+            <>
+              {roleConfig?.menuItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[15px] font-medium text-slate-500 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+              ))}
+              <button
+                onClick={() => {
+                  handleLogout();
+                  setMobileOpen(false);
+                }}
+                className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[15px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-100 dark:border-red-900/40 mt-1 transition-all"
               >
-                {item.icon}
-                {item.label}
-              </Link>
-            ))}
-
-          {user && (
-            <button
-              onClick={() => {
-                handleLogout();
-                setMobileOpen(false);
-              }}
-              className="flex items-center gap-3 w-full px-4 py-3 rounded-xl text-[15px] font-medium text-red-500 hover:bg-red-50 dark:hover:bg-red-950/30 border border-red-100 dark:border-red-900/40 mt-1 transition-all"
-            >
-              <HiOutlineArrowRightOnRectangle size={18} />
-              Logout
-            </button>
+                <HiOutlineArrowRightOnRectangle size={18} />
+                Logout
+              </button>
+            </>
           )}
         </div>
       </div>

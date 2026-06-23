@@ -25,6 +25,11 @@ const PROPERTY_TYPES = [
   "Townhouse",
 ];
 
+const INPUT_CLS =
+  "bg-white/10 dark:bg-white/5 text-white dark:text-slate-200 placeholder-white/35 dark:placeholder-slate-500 text-sm rounded-xl px-4 py-3 border border-white/10 dark:border-white/8 focus:outline-none focus:ring-2 focus:ring-[#E8834D]/60 transition-all duration-200 text-center w-full";
+const LABEL_CLS =
+  "flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-[#E8834D]/90 dark:text-[#f0976a]/80 transition-colors duration-300";
+
 export default function Banner() {
   const router = useRouter();
 
@@ -51,19 +56,19 @@ export default function Banner() {
 
   return (
     <section className="relative min-h-[92vh] flex items-center justify-center overflow-hidden">
-      {/* ── Background image ── */}
+      {/* Background image */}
       <div
         className="absolute inset-0 bg-cover bg-center bg-no-repeat"
         style={{ backgroundImage: "url('/banner.avif')" }}
       />
 
-      {/* ── Overlay: light mode = navy tint, dark mode = deeper slate ── */}
+      {/* Overlay */}
       <div className="absolute inset-0 bg-[#0d1f2d]/75 dark:bg-[#020810]/85 transition-colors duration-300" />
 
-      {/* ── Glow ── */}
+      {/* Glow */}
       <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[600px] h-[600px] rounded-full bg-[#E8834D]/10 dark:bg-[#E8834D]/6 blur-3xl pointer-events-none transition-colors duration-300" />
 
-      {/* ── Content ── */}
+      {/* Content */}
       <div className="relative z-10 w-full max-w-4xl mx-auto px-6 md:px-10 py-24 flex flex-col items-center text-center">
         {/* Eyebrow */}
         <motion.p
@@ -86,7 +91,7 @@ export default function Banner() {
           Find a Place
           <br />
           <span className="text-[#E8834D] dark:text-[#f0976a] transition-colors duration-300">
-            You'll Love
+            You&apos;ll Love
           </span>{" "}
           to Live
         </motion.h1>
@@ -102,7 +107,7 @@ export default function Banner() {
           studios, and more. Book securely and move in with confidence.
         </motion.p>
 
-        {/* ── Search Card ── */}
+        {/* Search Card */}
         <motion.div
           variants={fadeUp(0.3)}
           initial="hidden"
@@ -116,7 +121,7 @@ export default function Banner() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Location */}
             <div className="flex flex-col gap-1">
-              <label className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-[#E8834D]/90 dark:text-[#f0976a]/80 transition-colors duration-300">
+              <label className={LABEL_CLS}>
                 <FiMapPin className="text-xs" /> Location
               </label>
               <input
@@ -126,35 +131,20 @@ export default function Banner() {
                 onChange={handleChange}
                 onKeyDown={handleKeyDown}
                 placeholder="City or area…"
-                className="
-                  bg-white/10 dark:bg-white/5
-                  text-white dark:text-slate-200
-                  placeholder-white/35 dark:placeholder-slate-500
-                  text-sm rounded-xl px-4 py-3
-                  border border-white/10 dark:border-white/8
-                  focus:outline-none focus:ring-2 focus:ring-[#E8834D]/60
-                  transition-all duration-200 text-center
-                "
+                className={INPUT_CLS}
               />
             </div>
 
             {/* Property Type */}
             <div className="flex flex-col gap-1">
-              <label className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-[#E8834D]/90 dark:text-[#f0976a]/80 transition-colors duration-300">
+              <label className={LABEL_CLS}>
                 <FiHome className="text-xs" /> Property Type
               </label>
               <select
                 name="type"
                 value={filters.type}
                 onChange={handleChange}
-                className="
-                  bg-white/10 dark:bg-white/5
-                  text-white dark:text-slate-200
-                  text-sm rounded-xl px-4 py-3
-                  border border-white/10 dark:border-white/8
-                  focus:outline-none focus:ring-2 focus:ring-[#E8834D]/60
-                  transition-all duration-200 appearance-none cursor-pointer text-center
-                "
+                className={INPUT_CLS + " appearance-none cursor-pointer"}
               >
                 <option value="" className="bg-[#1B3B5A] dark:bg-[#0f1f30]">
                   All Types
@@ -173,7 +163,7 @@ export default function Banner() {
 
             {/* Min Price */}
             <div className="flex flex-col gap-1">
-              <label className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-[#E8834D]/90 dark:text-[#f0976a]/80 transition-colors duration-300">
+              <label className={LABEL_CLS}>
                 <FiDollarSign className="text-xs" /> Min Price /mo
               </label>
               <input
@@ -184,21 +174,13 @@ export default function Banner() {
                 onKeyDown={handleKeyDown}
                 placeholder="0"
                 min={0}
-                className="
-                  bg-white/10 dark:bg-white/5
-                  text-white dark:text-slate-200
-                  placeholder-white/35 dark:placeholder-slate-500
-                  text-sm rounded-xl px-4 py-3
-                  border border-white/10 dark:border-white/8
-                  focus:outline-none focus:ring-2 focus:ring-[#E8834D]/60
-                  transition-all duration-200 text-center
-                "
+                className={INPUT_CLS}
               />
             </div>
 
             {/* Max Price */}
             <div className="flex flex-col gap-1">
-              <label className="flex items-center justify-center gap-1 text-[10px] font-semibold uppercase tracking-widest text-[#E8834D]/90 dark:text-[#f0976a]/80 transition-colors duration-300">
+              <label className={LABEL_CLS}>
                 <FiDollarSign className="text-xs" /> Max Price /mo
               </label>
               <input
@@ -209,15 +191,7 @@ export default function Banner() {
                 onKeyDown={handleKeyDown}
                 placeholder="No limit"
                 min={0}
-                className="
-                  bg-white/10 dark:bg-white/5
-                  text-white dark:text-slate-200
-                  placeholder-white/35 dark:placeholder-slate-500
-                  text-sm rounded-xl px-4 py-3
-                  border border-white/10 dark:border-white/8
-                  focus:outline-none focus:ring-2 focus:ring-[#E8834D]/60
-                  transition-all duration-200 text-center
-                "
+                className={INPUT_CLS}
               />
             </div>
           </div>
@@ -225,7 +199,7 @@ export default function Banner() {
           {/* Search Button */}
           <button
             onClick={handleSearch}
-            className="mt-4 w-full bg-[#E8834D] hover:bg-[#d4723e] dark:bg-[#E8834D] dark:hover:bg-[#c9622f] active:scale-[.98] text-white font-semibold text-sm tracking-wide rounded-xl py-3.5 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-[#E8834D]/25"
+            className="mt-4 w-full bg-[#E8834D] hover:bg-[#d4723e] dark:hover:bg-[#c9622f] active:scale-[.98] text-white font-semibold text-sm tracking-wide rounded-xl py-3.5 transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-[#E8834D]/25"
           >
             <FiSearch className="text-base" />
             Search Properties
