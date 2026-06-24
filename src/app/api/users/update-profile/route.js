@@ -1,23 +1,23 @@
 import { NextResponse } from "next/server";
-import { MongoClient } from "mongodb";
+import { MongoClient, ObjectId } from "mongodb";
 
 const client = new MongoClient(process.env.MONGODB_URI);
 
 /**
- * GET /api/users/me?email=xxx
+ * POST /api/users/update-profile
+ * Body: { userId: string, photo: string, role: string }
  *
- * Returns fresh user data from MongoDB.
- * Used by the Navbar when the BetterAuth session is stale
- * (e.g. right after registration before the session refreshes).
+ * BetterAuth (MongoDB adapter) stores users with _id as ObjectId.
+ * We match by email as a reliable fallback since userId may be a
+ * string that doesn't directly map to _id.
  */
-export async function GET(request) {
+export async function POST(request) {
   try {
-    const { searchParams } = new URL(request.url);
-    const email = searchParams.get("email");
+    const { userId, email, photo, role } = await request.json();
 
-    if (!email) {
+    if (!userId && !email) {
       return NextResponse.json(
-        { error: "email is required." },
+        { error: "userId or email is required." },
         { status: 400 },
       );
     }
@@ -25,25 +25,46 @@ export async function GET(request) {
     await client.connect();
     const db = client.db(process.env.DB_NAME);
 
-    const user = await db.collection("user").findOne(
-      { email },
-      { projection: { image: 1, role: 1, name: 1, email: 1 } }, // only return what we need
-    );
-
-    if (!user) {
-      return NextResponse.json({ error: "User not found." }, { status: 404 });
+    // Try matching by _id (ObjectId) first, fall back to email
+    let filter;
+    try {
+      filter = { _id: new ObjectId(userId) };
+    } catch {
+      // userId isn't a valid ObjectId — match by email instead
+      filter = { email };
     }
 
-    return NextResponse.json({
-      image: user.image ?? "",
-      role: user.role ?? "tenant",
-      name: user.name,
-      email: user.email,
+    const result = await db.collection("user").updateOne(filter, {
+      $set: {
+        image: photo ?? "",
+        role: role ?? "tenant",
+        updatedAt: new Date(),
+      },
     });
+
+    if (result.matchedCount === 0) {
+      // Last resort: try matching by email if _id didn't work
+      if (email) {
+        await db
+          .collection("user")
+          .updateOne(
+            { email },
+            {
+              $set: {
+                image: photo ?? "",
+                role: role ?? "tenant",
+                updatedAt: new Date(),
+              },
+            },
+          );
+      }
+    }
+
+    return NextResponse.json({ success: true });
   } catch (err) {
-    console.error("[users/me]", err);
+    console.error("[update-profile]", err);
     return NextResponse.json(
-      { error: "Failed to fetch user." },
+      { error: "Failed to update profile." },
       { status: 500 },
     );
   }

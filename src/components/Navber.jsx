@@ -107,25 +107,21 @@ export default function Navbar() {
   const [freshUser, setFreshUser] = useState(null);
 
   useEffect(() => {
-    if (!sessionUser) {
+    if (!sessionUser?.email) {
       setFreshUser(null);
       return;
     }
-    // Session already has image — no need to fetch
-    if (sessionUser.image) {
-      setFreshUser(null);
-      return;
-    }
-    // Session is stale, fetch fresh data from MongoDB
+    // Always fetch fresh data from MongoDB when session user changes
+    // This ensures image shows instantly after register without reload
     fetch(`/api/users/me?email=${encodeURIComponent(sessionUser.email)}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data?.image) setFreshUser(data);
+        if (data?.image || data?.role) setFreshUser(data);
       })
       .catch(() => {});
-  }, [sessionUser?.email, sessionUser?.image]);
+  }, [sessionUser?.email]); // re-runs whenever a different user logs in
 
-  // Final user object — fresh data wins over stale session
+  // Final user object — fresh DB data wins over potentially stale session
   const user = sessionUser ? { ...sessionUser, ...freshUser } : null;
 
   const handleLogout = async () => {

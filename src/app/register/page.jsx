@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
@@ -14,7 +13,7 @@ import {
   HiOutlineExclamationCircle,
 } from "react-icons/hi2";
 import { FcGoogle } from "react-icons/fc";
-import { signUp, signIn, authClient } from "@/lib/auth-client"; // adjust path if different
+import { signUp, signIn } from "@/lib/auth-client"; // adjust path if different
 
 // ─── animation ───────────────────────────────────────────────────────────────
 const fadeUp = {
@@ -52,8 +51,6 @@ function Field({ icon: Icon, label, error, children }) {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function RegisterPage() {
-  const router = useRouter();
-
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -128,11 +125,7 @@ export default function RegisterPage() {
         }),
       });
 
-      // Force-refresh the session so the new image/role are included
-      // without needing a full page reload
-      await authClient.getSession({ fetchOptions: { cache: "no-store" } });
-
-      router.push("/");
+      window.location.href = "/";
     } catch (err) {
       setServerError("Something went wrong. Please try again.");
     } finally {
