@@ -13,7 +13,8 @@ import {
   HiOutlineExclamationCircle,
 } from "react-icons/hi2";
 import { FcGoogle } from "react-icons/fc";
-import { signUp, signIn } from "@/lib/auth-client"; // adjust path if different
+import { signUp, signIn } from "@/lib/auth-client";
+import { getJWT } from "@/lib/api"; // adjust path if different
 
 // ─── animation ───────────────────────────────────────────────────────────────
 const fadeUp = {
@@ -112,8 +113,7 @@ export default function RegisterPage() {
         return;
       }
 
-      // 2️⃣  Save photo URL + default role to MongoDB via our own API route
-      //     POST /api/users/update-profile  { userId, photo, role }
+      // 2️⃣ Save photo + role
       await fetch("/api/users/update-profile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -125,6 +125,11 @@ export default function RegisterPage() {
         }),
       });
 
+      // 3️⃣ Wait for MongoDB write to complete
+      await new Promise((resolve) => setTimeout(resolve, 500));
+
+      // 4️⃣ Get JWT then redirect
+      await getJWT(form.email);
       window.location.href = "/";
     } catch (err) {
       setServerError("Something went wrong. Please try again.");

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { getJWT } from "@/lib/api";
 import {
   HiOutlineEnvelope,
   HiOutlineLockClosed,
@@ -93,14 +94,11 @@ export default function LoginPage() {
         password: form.password,
       });
 
-      if (error) {
-        setServerError(
-          error.code === "INVALID_EMAIL_OR_PASSWORD"
-            ? "Incorrect email or password."
-            : error.message || "Login failed. Please try again.",
-        );
-        return;
+      if (!error) {
+        await getJWT(form.email);
+        window.location.href = "/";
       }
+
 
       router.push("/");
     } catch (err) {
