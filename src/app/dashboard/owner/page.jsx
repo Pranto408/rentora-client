@@ -1,13 +1,15 @@
 "use client";
 
 import { useSession } from "@/lib/auth-client";
+import { useEffect, useState } from "react";
+import { apiFetch } from "@/lib/api";
+import Link from "next/link";
 import {
   HiOutlineBanknotes,
   HiOutlineBuildingOffice2,
   HiOutlineClipboardDocumentList,
   HiOutlinePlusCircle,
 } from "react-icons/hi2";
-import Link from "next/link";
 import {
   LineChart,
   Line,
@@ -17,49 +19,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-
-// Placeholder monthly data — replace with real API data later
-const MONTHLY_DATA = [
-  { month: "Jul", earnings: 0 },
-  { month: "Aug", earnings: 0 },
-  { month: "Sep", earnings: 0 },
-  { month: "Oct", earnings: 0 },
-  { month: "Nov", earnings: 0 },
-  { month: "Dec", earnings: 0 },
-  { month: "Jan", earnings: 0 },
-  { month: "Feb", earnings: 0 },
-  { month: "Mar", earnings: 0 },
-  { month: "Apr", earnings: 0 },
-  { month: "May", earnings: 0 },
-  { month: "Jun", earnings: 0 },
-];
-
-const SUMMARY_CARDS = [
-  {
-    label: "Total Earnings",
-    value: "৳0",
-    icon: HiOutlineBanknotes,
-    bg: "bg-green-50 dark:bg-green-950/30",
-    iconColor: "text-green-500",
-    desc: "From successful bookings",
-  },
-  {
-    label: "Total Properties",
-    value: "0",
-    icon: HiOutlineBuildingOffice2,
-    bg: "bg-blue-50 dark:bg-blue-950/30",
-    iconColor: "text-blue-500",
-    desc: "Properties you have listed",
-  },
-  {
-    label: "Total Bookings",
-    value: "0",
-    icon: HiOutlineClipboardDocumentList,
-    bg: "bg-[#E8834D]/10 dark:bg-[#E8834D]/10",
-    iconColor: "text-[#E8834D]",
-    desc: "Confirmed across all properties",
-  },
-];
 
 export default function OwnerDashboardPage() {
   const { data: session } = useSession();
@@ -71,6 +30,93 @@ export default function OwnerDashboardPage() {
       .join("")
       .toUpperCase()
       .slice(0, 2) ?? "O";
+
+  const [stats, setStats] = useState({
+    totalEarnings: 0,
+    totalProperties: 0,
+    totalBookings: 0,
+    monthly: [],
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchStats() {
+      try {
+        // Fetch properties count
+        const propsData = await apiFetch("/api/properties/owner/my");
+        const totalProperties = Array.isArray(propsData) ? propsData.length : 0;
+
+        // Fetch bookings count
+        const bookingsData = await apiFetch("/api/bookings/owner");
+        const totalBookings = Array.isArray(bookingsData)
+          ? bookingsData.length
+          : 0;
+
+        // Fetch transactions + monthly earnings
+        const txData = await apiFetch("/api/transactions/owner");
+        const totalEarnings = txData?.totalEarnings ?? 0;
+        const monthly = txData?.monthly ?? generateEmptyMonths();
+
+        setStats({ totalEarnings, totalProperties, totalBookings, monthly });
+      } catch (err) {
+        console.error("Failed to fetch owner stats:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchStats();
+  }, []);
+
+  // Generate empty 12 months if no transaction data
+  function generateEmptyMonths() {
+    const months = [
+      "Jan",
+      "Feb",
+      "Mar",
+      "Apr",
+      "May",
+      "Jun",
+      "Jul",
+      "Aug",
+      "Sep",
+      "Oct",
+      "Nov",
+      "Dec",
+    ];
+    const now = new Date();
+    return Array.from({ length: 12 }, (_, i) => {
+      const d = new Date(now.getFullYear(), now.getMonth() - (11 - i), 1);
+      return { month: months[d.getMonth()], earnings: 0 };
+    });
+  }
+
+  const SUMMARY_CARDS = [
+    {
+      label: "Total Earnings",
+      value: `৳${stats.totalEarnings.toLocaleString()}`,
+      icon: HiOutlineBanknotes,
+      bg: "bg-green-50 dark:bg-green-950/30",
+      iconColor: "text-green-500",
+      desc: "From successful bookings",
+    },
+    {
+      label: "Total Properties",
+      value: loading ? "..." : stats.totalProperties,
+      icon: HiOutlineBuildingOffice2,
+      bg: "bg-blue-50 dark:bg-blue-950/30",
+      iconColor: "text-blue-500",
+      desc: "Properties you have listed",
+    },
+    {
+      label: "Total Bookings",
+      value: loading ? "..." : stats.totalBookings,
+      icon: HiOutlineClipboardDocumentList,
+      bg: "bg-[#E8834D]/10 dark:bg-[#E8834D]/10",
+      iconColor: "text-[#E8834D]",
+      desc: "Confirmed across all properties",
+    },
+  ];
 
   return (
     <div className="space-y-6">
@@ -116,7 +162,9 @@ export default function OwnerDashboardPage() {
                   <p className="text-sm text-slate-500 dark:text-slate-400">
                     {label}
                   </p>
-                  <p className="text-3xl font-bold text-[#1B3B5A] dark:text-white mt-1">
+                  <p
+                    className={`text-3xl font-bold text-[#1B3B5A] dark:text-white mt-1 ${loading ? "animate-pulse" : ""}`}
+                  >
                     {value}
                   </p>
                   <p className="text-xs text-slate-400 mt-1">{desc}</p>
@@ -149,7 +197,7 @@ export default function OwnerDashboardPage() {
         </div>
         <ResponsiveContainer width="100%" height={280}>
           <LineChart
-            data={MONTHLY_DATA}
+            data={stats.monthly}
             margin={{ top: 5, right: 10, left: 0, bottom: 5 }}
           >
             <CartesianGrid
