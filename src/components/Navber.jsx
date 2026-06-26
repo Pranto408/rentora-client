@@ -18,6 +18,7 @@ import {
 } from "react-icons/hi2";
 import { RiMoonLine, RiSunLine } from "react-icons/ri";
 import { useSession, signOut } from "@/lib/auth-client";
+import { getJWT, clearJWT, getStoredToken } from "@/lib/api"; // ← added clearJWT, getStoredToken
 
 const NAV_LINKS = [
   { label: "Home", href: "/", icon: <HiOutlineHome size={15} /> },
@@ -103,28 +104,41 @@ export default function Navbar() {
   const sessionUser = session?.user ?? null;
   const router = useRouter();
 
-  // Holds fresh DB data when session is stale (e.g. right after register)
   const [freshUser, setFreshUser] = useState(null);
 
+  // ─── Fetch fresh user data from MongoDB on session change ─────────────────
   useEffect(() => {
     if (!sessionUser?.email) {
       setFreshUser(null);
       return;
     }
-    // Always fetch fresh data from MongoDB when session user changes
-    // This ensures image shows instantly after register without reload
     fetch(`/api/users/me?email=${encodeURIComponent(sessionUser.email)}`)
       .then((r) => r.json())
       .then((data) => {
         if (data?.image || data?.role) setFreshUser(data);
       })
       .catch(() => {});
-  }, [sessionUser?.email]); // re-runs whenever a different user logs in
+  }, [sessionUser?.email]);
 
-  // Final user object — fresh DB data wins over potentially stale session
+  // ─── FIX: Generate JWT after Google OAuth redirect ─────────────────────────
+  // Email/password login calls getJWT() explicitly → token already in localStorage.
+  // Google OAuth redirects back to the app with no code running → token is missing.
+  // This effect catches that case: if there's a session but no token, generate one.
+  useEffect(() => {
+    if (!sessionUser?.email) return;
+
+    const existingToken = getStoredToken();
+    if (existingToken) return; // already have a token (email/password login), skip
+
+    // No token in storage = Google OAuth just landed. Generate one now.
+    getJWT(sessionUser.email);
+  }, [sessionUser?.email]);
+
   const user = sessionUser ? { ...sessionUser, ...freshUser } : null;
 
+  // ─── FIX: Clear JWT on logout so the next user starts clean ───────────────
   const handleLogout = async () => {
+    clearJWT(); // ← removes rentora_token from localStorage before signOut
     await signOut();
     router.push("/");
     router.refresh();

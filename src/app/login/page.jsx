@@ -115,7 +115,7 @@ export default function LoginPage() {
     try {
       await signIn.social({
         provider: "google",
-        callbackURL: "/dashboard/tenant", // Google users are always tenants
+        callbackURL: "/", // Google users are always tenants
       });
     } catch (err) {
       setServerError("Google sign-in failed. Please try again.");
