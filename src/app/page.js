@@ -1,4 +1,5 @@
 import Banner from "@/components/homepage/Banner";
+import CustomerReviews from "@/components/homepage/CustomerReviews";
 import FeaturedProperties from "@/components/homepage/FeaturedProperties";
 import TopLocations from "@/components/homepage/TopLocations";
 import TrustedOwners from "@/components/homepage/TrustedOwners";
@@ -10,6 +11,7 @@ export default function Home() {
     <Banner />
     <FeaturedProperties/>
     <WhyChooseUs />
+    <CustomerReviews/>
     <TopLocations />
     <TrustedOwners/>
   </div>;
