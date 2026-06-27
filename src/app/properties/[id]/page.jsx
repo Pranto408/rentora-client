@@ -390,29 +390,18 @@ export default function PropertyDetailsPage() {
     }
   }
 
-  // ── booking confirmed → save directly (Stripe added later) ──────────────
-  async function handleBookingConfirm(bookingData) {
-    try {
-      const result = await apiFetch("/api/bookings", {
-        method: "POST",
-        body: JSON.stringify({
-          propertyId: id,
-          moveInDate: bookingData.moveInDate,
-          contactNumber: bookingData.contactNumber,
-          additionalNotes: bookingData.additionalNotes,
-          transactionId: "pending_payment_" + Date.now(),
-          amountPaid: 0,
-        }),
-      });
-      if (result?.error) {
-        alert(result.error);
-        return;
-      }
-      setBookingModal(false);
-      router.push("/dashboard/tenant/bookings");
-    } catch {
-      alert("Failed to create booking. Please try again.");
-    }
+  // ── booking confirmed → save to sessionStorage → go to payment ──────────
+  function handleBookingConfirm(bookingData) {
+    sessionStorage.setItem(
+      "pendingBooking",
+      JSON.stringify({
+        ...bookingData,
+        propertyId: id,
+        amount: property.rent,
+      }),
+    );
+    setBookingModal(false);
+    router.push(`/payment/${id}`);
   }
 
   // ── book button click ──────────────────────────────────────────────────────
