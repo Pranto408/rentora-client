@@ -70,7 +70,7 @@ const ROLE_CONFIG = {
       },
       {
         label: "Add Property",
-        href: "/dashboard/owner/add",
+        href: "/dashboard/owner/add-property",
         icon: <HiOutlinePlusCircle size={15} />,
       },
       {
