@@ -52,7 +52,7 @@ export default function AdminBookingsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
-  const LIMIT = 10;
+  const LIMIT = 5;
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   useEffect(() => {

@@ -26,7 +26,7 @@ export default function AdminTransactionsPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [totalEarnings, setTotalEarnings] = useState(0);
-  const LIMIT = 10;
+  const LIMIT = 5;
 
   // ── fetch ──────────────────────────────────────────────────────────────────
   useEffect(() => {

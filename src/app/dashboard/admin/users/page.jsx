@@ -182,7 +182,7 @@ export default function AdminUsersPage() {
   const [roleLoading, setRoleLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
 
-  const LIMIT = 10;
+  const LIMIT = 5;
 
   // ── fetch users ────────────────────────────────────────────────────────────
   async function fetchUsers() {
