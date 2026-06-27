@@ -2,12 +2,29 @@ import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { MongoClient } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI);
-const db = client.db(process.env.DB_NAME);
+// ─── Lazy MongoDB connection ───────────────────────────────────────────────────
+// Do NOT instantiate MongoClient at the top level — it runs at build time
+// when MONGODB_URI is undefined, causing build failures on Vercel.
+let client;
+let db;
+
+function getDb() {
+  if (!client) {
+    client = new MongoClient(process.env.MONGODB_URI);
+    db = client.db(process.env.DB_NAME);
+  }
+  return db;
+}
 
 export const auth = betterAuth({
-  database: mongodbAdapter(db, {
-    client,
+  database: mongodbAdapter(getDb(), {
+    client: (() => {
+      if (!client) {
+        client = new MongoClient(process.env.MONGODB_URI);
+        db = client.db(process.env.DB_NAME);
+      }
+      return client;
+    })(),
   }),
 
   emailAndPassword: {
@@ -16,20 +33,18 @@ export const auth = betterAuth({
 
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || "placeholder-google-client-id",
-      clientSecret:
-        process.env.GOOGLE_CLIENT_SECRET || "placeholder-google-client-secret",
+      clientId: process.env.GOOGLE_CLIENT_ID || "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
     },
   },
 
-  // Expose custom fields so useSession() returns them in session.user
   user: {
     additionalFields: {
       role: {
         type: "string",
         required: false,
         defaultValue: "tenant",
-        input: false, // not settable by the client directly
+        input: false,
       },
       image: {
         type: "string",
@@ -40,7 +55,6 @@ export const auth = betterAuth({
     },
   },
 
-  // Auto-assign role: "tenant" to every new user (email OR Google).
   databaseHooks: {
     user: {
       create: {
