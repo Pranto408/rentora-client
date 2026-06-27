@@ -2,30 +2,13 @@ import { betterAuth } from "better-auth";
 import { mongodbAdapter } from "better-auth/adapters/mongodb";
 import { MongoClient } from "mongodb";
 
-// ─── Lazy MongoDB connection ───────────────────────────────────────────────────
-// Do NOT instantiate MongoClient at the top level — it runs at build time
-// when MONGODB_URI is undefined, causing build failures on Vercel.
-let client;
-let db;
-
-function getDb() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGODB_URI);
-    db = client.db(process.env.DB_NAME);
-  }
-  return db;
-}
+const client = new MongoClient(
+  process.env.MONGODB_URI ?? "mongodb://localhost:27017",
+);
+const db = client.db(process.env.DB_NAME ?? "rentora");
 
 export const auth = betterAuth({
-  database: mongodbAdapter(getDb(), {
-    client: (() => {
-      if (!client) {
-        client = new MongoClient(process.env.MONGODB_URI);
-        db = client.db(process.env.DB_NAME);
-      }
-      return client;
-    })(),
-  }),
+  database: mongodbAdapter(db, { client }),
 
   emailAndPassword: {
     enabled: true,
@@ -33,8 +16,8 @@ export const auth = betterAuth({
 
   socialProviders: {
     google: {
-      clientId: process.env.GOOGLE_CLIENT_ID || "",
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET || "",
+      clientId: process.env.GOOGLE_CLIENT_ID ?? "",
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? "",
     },
   },
 
