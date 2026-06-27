@@ -232,7 +232,7 @@ export default function TrustedOwners() {
             </p>
           </div>
           <a
-            href="/register"
+            href="mailto:rentora@gmail.com?subject=Become%20an%20Owner&body=Hello%20Rentora%20Team,%0A%0AI%20would%20like%20to%20become%20an%20owner."
             className="flex-shrink-0 bg-[#E8834D] hover:bg-[#d4723e] text-white font-semibold text-sm px-6 py-3 rounded-xl transition-all duration-200 shadow-lg shadow-[#E8834D]/30 whitespace-nowrap"
           >
             Become an Owner →
