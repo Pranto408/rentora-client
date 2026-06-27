@@ -17,12 +17,11 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    // 🟢 এখানে ব্যাকগ্রাউন্ড ও টেক্সটের কালার লাইট ও ডার্ক দুই মোডের জন্যই নিখুঁত করা হয়েছে
     <footer className="bg-slate-50 dark:bg-[#0F172A] text-slate-600 dark:text-slate-300 border-t border-slate-200 dark:border-white/10 transition-colors duration-200">
-      {/* ─── Main Footer Content ─────────────────────────────────── */}
+      {/* Main Footer Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Column 1: Brand & About */}
+          {/* Column 1: Brand */}
           <div className="flex flex-col gap-4">
             <Link href="/" className="flex items-center gap-2.5 group">
               <div className="w-9 h-9 rounded-[10px] bg-gradient-to-br from-[#1B3B5A] to-[#1e4570] flex items-center justify-center relative overflow-hidden">
@@ -53,7 +52,6 @@ export default function Footer() {
               with ease. We connect trusted owners with premium tenants
               seamlessly.
             </p>
-            {/* Social Icons */}
             <div className="flex items-center gap-3 mt-2">
               {[
                 { icon: <FaFacebookF size={14} />, href: "#" },
@@ -81,8 +79,8 @@ export default function Footer() {
               {[
                 { label: "Home", href: "/" },
                 { label: "All Properties", href: "/properties" },
-                { label: "About Rentora", href: "/about" },
-                { label: "Pricing Plans", href: "/pricing" },
+                { label: "About Rentora", href: "#" },
+                { label: "Pricing Plans", href: "#" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -103,10 +101,10 @@ export default function Footer() {
             </h3>
             <ul className="space-y-2.5 text-sm">
               {[
-                { label: "Terms of Service", href: "/terms" },
-                { label: "Privacy Policy", href: "/privacy" },
-                { label: "FAQs", href: "/faqs" },
-                { label: "Contact Us", href: "/contact" },
+                { label: "Terms of Service", href: "#" },
+                { label: "Privacy Policy", href: "#" },
+                { label: "FAQs", href: "#" },
+                { label: "Contact Us", href: "#" },
               ].map((link) => (
                 <li key={link.label}>
                   <Link
@@ -152,7 +150,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* ─── Bottom Bar ──────────────────────────────────────────── */}
+      {/* Bottom Bar */}
       <div className="border-t border-slate-200 dark:border-slate-800 bg-slate-100/50 dark:bg-slate-950/40 py-6">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-slate-400 dark:text-slate-500">
           <p>© {currentYear} Rentora. All rights reserved.</p>
