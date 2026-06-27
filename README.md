@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Rentora — Property Rental & Booking Platform
 
-## Getting Started
+Rentora helps property owners list rental properties and allows tenants to discover, book, and pay reservation fees online. The platform includes role-based access control, property management, booking workflows, secure payments, review systems, and administrative moderation.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 🌐 Live URL
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+**[https://rentora-client-yav5.vercel.app](https://rentora-client-yav5.vercel.app)**
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## ✨ Key Features
 
-## Learn More
+- Email & password authentication with Google OAuth
+- Role-based access control — Tenant, Owner, Admin
+- JWT-based API protection
+- Property listing with search, filter, sort and pagination
+- Booking system with owner approval workflow
+- Stripe payment integration
+- Favorites and review system
+- Admin dashboard — manage users, properties, bookings and transactions
+- Owner dashboard with analytics and monthly earnings chart
+- Dark / Light theme toggle
+- Fully responsive design for mobile, tablet and desktop
 
-To learn more about Next.js, take a look at the following resources:
+---
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## 📦 NPM Packages Used
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Package | Purpose |
+|---|---|
+| `next` | React framework with App Router |
+| `react` | UI library |
+| `better-auth` | Authentication with Google OAuth and email/password |
+| `mongodb` | MongoDB database driver |
+| `@stripe/stripe-js` | Stripe browser SDK |
+| `@stripe/react-stripe-js` | Stripe React card components |
+| `framer-motion` | Page and section animations |
+| `recharts` | Monthly earnings line chart |
+| `react-icons` | Icon library |
+| `tailwindcss` | Utility-first CSS framework |
