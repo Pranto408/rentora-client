@@ -1,16 +1,18 @@
 import { NextResponse } from "next/server";
 import { MongoClient, ObjectId } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI);
+let client;
+let db;
 
-/**
- * POST /api/users/update-profile
- * Body: { userId: string, photo: string, role: string }
- *
- * BetterAuth (MongoDB adapter) stores users with _id as ObjectId.
- * We match by email as a reliable fallback since userId may be a
- * string that doesn't directly map to _id.
- */
+async function getDb() {
+  if (!client) {
+    client = new MongoClient(process.env.MONGODB_URI);
+    await client.connect();
+    db = client.db(process.env.DB_NAME);
+  }
+  return db;
+}
+
 export async function POST(request) {
   try {
     const { userId, email, photo, role } = await request.json();
@@ -22,15 +24,12 @@ export async function POST(request) {
       );
     }
 
-    await client.connect();
-    const db = client.db(process.env.DB_NAME);
+    const db = await getDb();
 
-    // Try matching by _id (ObjectId) first, fall back to email
     let filter;
     try {
       filter = { _id: new ObjectId(userId) };
     } catch {
-      // userId isn't a valid ObjectId — match by email instead
       filter = { email };
     }
 
@@ -42,22 +41,19 @@ export async function POST(request) {
       },
     });
 
-    if (result.matchedCount === 0) {
-      // Last resort: try matching by email if _id didn't work
-      if (email) {
-        await db
-          .collection("user")
-          .updateOne(
-            { email },
-            {
-              $set: {
-                image: photo ?? "",
-                role: role ?? "tenant",
-                updatedAt: new Date(),
-              },
+    if (result.matchedCount === 0 && email) {
+      await db
+        .collection("user")
+        .updateOne(
+          { email },
+          {
+            $set: {
+              image: photo ?? "",
+              role: role ?? "tenant",
+              updatedAt: new Date(),
             },
-          );
-      }
+          },
+        );
     }
 
     return NextResponse.json({ success: true });

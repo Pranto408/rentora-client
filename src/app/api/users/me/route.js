@@ -1,7 +1,17 @@
 import { NextResponse } from "next/server";
 import { MongoClient } from "mongodb";
 
-const client = new MongoClient(process.env.MONGODB_URI);
+let client;
+let db;
+
+async function getDb() {
+  if (!client) {
+    client = new MongoClient(process.env.MONGODB_URI);
+    await client.connect();
+    db = client.db(process.env.DB_NAME);
+  }
+  return db;
+}
 
 export async function GET(request) {
   try {
@@ -15,9 +25,7 @@ export async function GET(request) {
       );
     }
 
-    await client.connect();
-    const db = client.db(process.env.DB_NAME);
-
+    const db = await getDb();
     const user = await db
       .collection("user")
       .findOne(
